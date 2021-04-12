@@ -6,9 +6,14 @@ on:
 jobs:
   e2e-test:
     # if: contains(github.event.pull_request.labels.*.name, 'hardware')
-    if: contains(github.event.push.labels.*.name, 'hardware')
+    # if: contains(github.event.push.labels.*.name, 'hardware')
     name: E2E test on hardware
     runs-on: self-hosted
     steps:
       - name: Get tools
         run: echo "Display text"
+
+        - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
