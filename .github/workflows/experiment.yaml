@@ -1,8 +1,8 @@
 name: e2e_hardware
-on: [push]
-  # pull_request:
+on:
+  pull_request:
   # push
-    # types: [opened, synchronize, reopened, labeled]
+    types: [opened, synchronize, reopened, labeled]
 jobs:
   e2e-test:
     # if: contains(github.event.pull_request.labels.*.name, 'hardware')
