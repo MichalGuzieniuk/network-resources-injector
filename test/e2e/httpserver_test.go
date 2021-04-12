@@ -7,7 +7,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-var _ = Describe("Network injection testing very ", func() {
+var _ = Describe("Network injection testing very bad ", func() {
 	var pod *corev1.Pod
 	var err error
 
