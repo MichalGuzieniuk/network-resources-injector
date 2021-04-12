@@ -1,7 +1,7 @@
 name: e2e_hardware
-on:
+on: [push pull_request]
   # pull_request:
-  push
+  # push
     # types: [opened, synchronize, reopened, labeled]
 jobs:
   e2e-test:
