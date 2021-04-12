@@ -1,12 +1,10 @@
 name: e2e_hardware
-on: [push]
-  # pull_request:
-  # push
-    # types: [opened, synchronize, reopened, labeled]
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
 jobs:
   e2e-test:
-    # if: contains(github.event.pull_request.labels.*.name, 'hardware')
-    # if: contains(github.event.push.labels.*.name, 'hardware')
+    if: contains(github.event.pull_request.labels.*.name, 'hardware')
     name: E2E test on hardware
     runs-on: self-hosted
     steps:
