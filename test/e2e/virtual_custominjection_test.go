@@ -249,7 +249,7 @@ var _ = Describe("Verify 'User Defined Injections'", func() {
 			Expect(err).Should(BeNil())
 
 			Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).Should(ContainSubstring("sriov-net-attach-def"))
-			Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).Shouldnot(ContainSubstring("foo-network"))
+			Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).ShouldNot(ContainSubstring("foo-network"))
 		})
 
 		It("Create POD and valid ConfigMap, next delete ConfigMap and create anther POD, expected without annotations", func() {
