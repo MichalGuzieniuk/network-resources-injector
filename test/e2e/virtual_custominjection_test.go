@@ -92,7 +92,7 @@ var _ = Describe("Verify 'User Defined Injections'", func() {
 			Expect(err).Should(BeNil())
 
 			Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).Should(ContainSubstring("sriov-net-attach-def"))
-			Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).Should(ContainSubstring("foo-network"))
+			Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).ShouldNot(ContainSubstring("foo-network"))
 		})
 
 		It("Config map in correct namespace, TWO labels to inject, POD specification WITH resource name", func() {
@@ -126,6 +126,33 @@ var _ = Describe("Verify 'User Defined Injections'", func() {
 			Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).ShouldNot(ContainSubstring("foo-network"))
 		})
 
+		It("ConfigMap in correct namespace, ONE labels to inject not related to network, POD specification WITH resource name", func() {
+			configMap = util.GetConfigMap("nri-user-defined-injections", "kube-system")
+			configMap = util.AddData(configMap,
+				"secondInjection",
+				"{\"op\": \"add\", \"path\": \"/metadata/annotations\", \"value\": {\"top-secret\": \"password\"}}")
+			err = util.ApplyConfigMap(cs.CoreV1Interface, configMap, timeout)
+			Expect(err).Should(BeNil())
+
+			// wait for configmap to be consumed by NRI, expected to see in logs something like
+			// webhook.go:920] Initializing user-defined injections with key: customInjection, value: {}
+			time.Sleep(60 * time.Second)
+
+			pod = util.GetOneNetwork(testNetworkName, *testNs, defaultPodName)
+			pod = util.AddMetadataLabel(pod, "secondInjection", "true")
+
+			err = util.CreateRunningPod(cs.CoreV1Interface, pod, timeout, interval)
+			Expect(err).Should(BeNil())
+			Expect(pod.Name).ShouldNot(BeNil())
+
+			pod, err = util.UpdatePodInfo(cs.CoreV1Interface, pod, timeout)
+			Expect(err).Should(BeNil())
+
+			Expect(pod.Annotations["top-secret"]).Should(ContainSubstring("password"))
+			Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).ShouldNot(ContainSubstring("sriov-net-attach-def"))
+			Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).Should(ContainSubstring("foo-network"))
+		})
+
 		It("Create one POD and next update configMap and create second POD, both should have different injections.", func() {
 			configMap = util.GetConfigMap("nri-user-defined-injections", "kube-system")
 			configMap = util.AddData(configMap,
@@ -149,7 +176,7 @@ var _ = Describe("Verify 'User Defined Injections'", func() {
 			Expect(err).Should(BeNil())
 
 			Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).Should(ContainSubstring("sriov-net-attach-def"))
-			// Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).Should(ContainSubstring("foo-network"))
+			Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).ShouldNot(ContainSubstring("foo-network"))
 
 			// update ConfigMap
 			util.DeleteConfigMap(cs.CoreV1Interface, configMap, timeout)
@@ -180,7 +207,7 @@ var _ = Describe("Verify 'User Defined Injections'", func() {
 			Expect(err).Should(BeNil())
 
 			Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).Should(ContainSubstring("sriov-net-attach-def"))
-			// Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).Should(ContainSubstring("foo-network"))
+			Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).ShouldNot(ContainSubstring("foo-network"))
 
 			Expect(pod2.Annotations["k8s.v1.cni.cncf.io/networks"]).ShouldNot(ContainSubstring("sriov-net-attach-def"))
 			Expect(pod2.Annotations["k8s.v1.cni.cncf.io/networks"]).Should(ContainSubstring("foo-network"))
@@ -210,7 +237,7 @@ var _ = Describe("Verify 'User Defined Injections'", func() {
 			Expect(err).Should(BeNil())
 
 			Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).Should(ContainSubstring("sriov-net-attach-def"))
-			// Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).Should(ContainSubstring("foo-network"))
+			Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).ShouldNot(ContainSubstring("foo-network"))
 
 			util.DeleteConfigMap(cs.CoreV1Interface, configMap, timeout)
 
@@ -222,7 +249,7 @@ var _ = Describe("Verify 'User Defined Injections'", func() {
 			Expect(err).Should(BeNil())
 
 			Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).Should(ContainSubstring("sriov-net-attach-def"))
-			// Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).Should(ContainSubstring("foo-network"))
+			Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).Shouldnot(ContainSubstring("foo-network"))
 		})
 
 		It("Create POD and valid ConfigMap, next delete ConfigMap and create anther POD, expected without annotations", func() {
@@ -248,7 +275,7 @@ var _ = Describe("Verify 'User Defined Injections'", func() {
 			Expect(err).Should(BeNil())
 
 			Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).Should(ContainSubstring("sriov-net-attach-def"))
-			// Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).Should(ContainSubstring("foo-network"))
+			Expect(pod.Annotations["k8s.v1.cni.cncf.io/networks"]).ShouldNot(ContainSubstring("foo-network"))
 
 			// delete POD and remove map
 			util.DeletePod(cs.CoreV1Interface, pod, timeout)
@@ -503,5 +530,4 @@ var _ = Describe("Verify 'User Defined Injections'", func() {
 			Expect(err).ShouldNot(BeNil())
 		})
 	})
-
 })
